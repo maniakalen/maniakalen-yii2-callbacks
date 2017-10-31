@@ -48,10 +48,7 @@ class CallbacksManager extends Component
                 if (!$this->isCallback($callback)) {
                     throw new \Exception("Given parameter is not a valid callback");
                 }
-                $temp = tempnam('/tmp', 'cbk');
-                file_put_contents($temp, '<?php return ' . $callback . '; ?>');
-                $callback = include $temp;
-                unlink($temp);
+                $callback = $this->evaluateStringExpression($callback);
             }
             if (!is_callable($callback)) {
                 throw new CallbackException("Provided callback is not a valid callable");
@@ -72,5 +69,21 @@ class CallbacksManager extends Component
     public function isCallback($callback)
     {
         return strpos($callback, 'function(') === 0;
+    }
+
+    /**
+     * Evaluates php expression presented as string
+     *
+     * @param string $expression expression to be evaluated
+     *
+     * @return mixed
+     */
+    public function evaluateStringExpression($expression)
+    {
+        $temp = tempnam('/tmp', 'cbk');
+        file_put_contents($temp, '<?php return ' . $expression . '; ?>');
+        $callback = include $temp;
+        unlink($temp);
+        return $callback;
     }
 }
